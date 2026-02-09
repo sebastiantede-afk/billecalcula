@@ -9,7 +9,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#020617">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/10433/10433048.png">
+    
+    <!-- Icono para iPhone/iOS buscando el archivo local icon.png -->
+    <link rel="apple-touch-icon" href="icon.png">
     
     <!-- Manifest File -->
     <link rel="manifest" href="manifest.json">
@@ -160,14 +162,14 @@
     </div>
 
     <script>
-        // Register Service Worker (Definitive Fix for Vercel/PWA)
+        // Registrar Service Worker buscando el archivo local sw.js
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
             });
         }
 
-        // App Logic
+        // Lógica de la App
         let state = {
             balance: 0,
             products: [

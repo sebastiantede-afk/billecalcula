@@ -10,10 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#020617">
     
-    <!-- Icono para iPhone/iOS buscando el archivo local icon.png -->
     <link rel="apple-touch-icon" href="icon.png">
-    
-    <!-- Manifest File -->
     <link rel="manifest" href="manifest.json">
 
     <title>Billetera Emprendedor Pro</title>
@@ -27,6 +24,7 @@
             color: #f8fafc;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
 
         .glass { 
@@ -36,7 +34,6 @@
         }
 
         .active-scale:active { transform: scale(0.96); transition: 0.1s; }
-        
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
         .modal-overlay {
@@ -50,7 +47,8 @@
         .modal-overlay.active { display: flex; }
 
         .safe-top { padding-top: env(safe-area-inset-top); }
-        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .view { display: none; }
+        .view.active { display: block; }
 
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
@@ -59,85 +57,109 @@
         }
     </style>
 </head>
-<body class="pb-20">
+<body class="pb-24">
 
-    <!-- Header -->
+    <!-- Header Fijo -->
     <nav class="sticky top-0 z-50 glass border-b border-slate-800 px-5 py-4 safe-top flex justify-between items-center">
         <div>
             <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Balance Total</p>
             <h1 id="main-balance" class="text-3xl font-extrabold text-white">$ 0</h1>
         </div>
         <div class="flex gap-2">
+            <!-- Botón de Caja (Ingresos/Egresos) -->
+            <button onclick="switchView('cash-view')" class="bg-slate-800 p-3 rounded-xl active-scale border border-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </button>
             <button onclick="openModal('inventory-modal')" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-indigo-900 active-scale">MENU</button>
         </div>
     </nav>
 
-    <main class="p-4 space-y-6">
-        
-        <!-- Quick Sales Grid -->
-        <section>
-            <h2 class="text-xs font-bold text-slate-500 uppercase mb-3 ml-1">Venta Rápida</h2>
-            <div id="pos-grid" class="grid grid-cols-2 gap-3">
-                <!-- Injected via JS -->
-            </div>
-        </section>
+    <!-- VISTA 1: VENTAS (POS) -->
+    <div id="pos-view" class="view active">
+        <main class="p-4 space-y-6">
+            <section>
+                <h2 class="text-xs font-bold text-slate-500 uppercase mb-3 ml-1">Venta Rápida</h2>
+                <div id="pos-grid" class="grid grid-cols-2 gap-3"></div>
+            </section>
 
-        <!-- Checkout Panel -->
-        <section class="glass rounded-[2.5rem] p-6 shadow-2xl border border-slate-700/50">
-            <div class="flex justify-between items-end mb-4">
-                <h2 class="font-bold text-xl">Ticket</h2>
-                <button onclick="clearCart()" class="text-[10px] text-slate-500 font-bold border border-slate-800 px-3 py-1 rounded-full uppercase tracking-tight">Limpiar</button>
-            </div>
-            
-            <div id="cart-items" class="space-y-3 mb-6 max-h-48 overflow-y-auto no-scrollbar">
-                <!-- Cart items -->
-            </div>
-
-            <div class="border-t border-slate-800 pt-5 space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-400 font-medium text-lg">Subtotal:</span>
-                    <span id="cart-total" class="text-2xl font-black text-indigo-400">$ 0</span>
+            <section class="glass rounded-[2.5rem] p-6 shadow-2xl border border-slate-700/50">
+                <div class="flex justify-between items-end mb-4">
+                    <h2 class="font-bold text-xl">Ticket</h2>
+                    <button onclick="clearCart()" class="text-[10px] text-slate-500 font-bold border border-slate-800 px-3 py-1 rounded-full uppercase">Limpiar</button>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Paga con:</label>
-                        <input type="number" id="pay-amount" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xl font-bold outline-none focus:border-indigo-500 transition-all" placeholder="0">
+                <div id="cart-items" class="space-y-3 mb-6 max-h-48 overflow-y-auto no-scrollbar"></div>
+                <div class="border-t border-slate-800 pt-5 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400 font-medium text-lg">Total:</span>
+                        <span id="cart-total" class="text-2xl font-black text-indigo-400">$ 0</span>
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Vuelto:</label>
-                        <div class="w-full bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl text-xl font-bold text-emerald-400 overflow-hidden truncate">
-                            <span id="change-amount">$ 0</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Paga con:</label>
+                            <input type="number" id="pay-amount" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xl font-bold outline-none focus:border-indigo-500 transition-all" placeholder="0">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Vuelto:</label>
+                            <div class="w-full bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl text-xl font-bold text-emerald-400 overflow-hidden truncate">
+                                <span id="change-amount">$ 0</span>
+                            </div>
                         </div>
                     </div>
+                    <button onclick="confirmSale()" class="w-full py-5 bg-indigo-600 rounded-2xl font-extrabold text-white active-scale shadow-xl shadow-indigo-950/50 text-lg">REGISTRAR VENTA</button>
                 </div>
+            </section>
 
-                <button onclick="confirmSale()" class="w-full py-5 bg-indigo-600 rounded-2xl font-extrabold text-white active-scale shadow-xl shadow-indigo-950/50 text-lg">
-                    REGISTRAR VENTA
-                </button>
-            </div>
-        </section>
+            <section>
+                <h2 class="text-xs font-bold text-slate-500 uppercase mb-3 ml-1">Historial Reciente</h2>
+                <div id="history-log" class="space-y-2"></div>
+            </section>
+        </main>
+    </div>
 
-        <!-- Recent History -->
-        <section>
-            <h2 class="text-xs font-bold text-slate-500 uppercase mb-3 ml-1">Últimos Movimientos</h2>
-            <div id="history-log" class="space-y-2">
-                <!-- History items -->
-            </div>
-        </section>
+    <!-- VISTA 2: CAJA (INGRESOS / EGRESOS) -->
+    <div id="cash-view" class="view">
+        <main class="p-4 space-y-6">
+            <button onclick="switchView('pos-view')" class="text-indigo-400 text-xs font-bold flex items-center gap-2 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg> VOLVER A VENTAS
+            </button>
 
-    </main>
+            <section class="glass rounded-[2rem] p-6 border border-slate-700/50">
+                <h2 class="font-bold text-xl mb-6">Nuevo Movimiento de Caja</h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-900 rounded-2xl border border-slate-800">
+                        <button id="type-income" onclick="setCashType('income')" class="py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white transition-all">INGRESO</button>
+                        <button id="type-expense" onclick="setCashType('expense')" class="py-3 rounded-xl font-bold text-sm text-slate-400 hover:bg-slate-800 transition-all">EGRESO</button>
+                    </div>
 
-    <!-- Management Modal -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Monto</label>
+                        <input type="number" id="cash-amount" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-2xl font-black outline-none focus:border-indigo-500" placeholder="0.00">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Observación</label>
+                        <textarea id="cash-obs" rows="2" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-sm outline-none focus:border-indigo-500" placeholder="Ej: Pago de alquiler, carga de mercadería..."></textarea>
+                    </div>
+
+                    <button onclick="registerCashMovement()" class="w-full py-5 bg-slate-100 text-slate-900 rounded-2xl font-black active-scale shadow-lg text-lg">GUARDAR MOVIMIENTO</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modales de Configuración -->
     <div id="inventory-modal" class="modal-overlay items-end justify-center">
         <div class="bg-slate-900 w-full max-w-md rounded-t-[2.5rem] flex flex-col max-h-[90vh] border-t border-slate-800">
             <div class="p-6 border-b border-slate-800 flex justify-between items-center">
                 <h3 class="font-bold text-xl">Configuración</h3>
                 <button onclick="closeModal('inventory-modal')" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-full active-scale">✕</button>
             </div>
-            
             <div class="p-6 overflow-y-auto no-scrollbar space-y-8 pb-32">
-                <!-- Add Product -->
                 <div class="space-y-4">
                     <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Nuevo Producto</h4>
                     <div class="flex gap-2">
@@ -146,14 +168,10 @@
                     </div>
                     <button onclick="addProduct()" class="w-full py-4 bg-slate-100 text-slate-900 rounded-xl font-black active-scale uppercase text-sm">Guardar Producto</button>
                 </div>
-
-                <!-- Product List -->
                 <div class="space-y-4">
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Mis Productos</h4>
                     <div id="full-inventory" class="grid gap-2"></div>
                 </div>
-
-                <!-- Danger Zone -->
                 <div class="pt-4">
                     <button onclick="clearAllData()" class="w-full py-4 border border-rose-500/30 text-rose-500 rounded-xl font-bold text-xs uppercase tracking-widest active-scale">Borrar base de datos</button>
                 </div>
@@ -162,38 +180,61 @@
     </div>
 
     <script>
-        // Registrar Service Worker buscando el archivo local sw.js
+        // Manejo del Service Worker para funcionamiento PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
             });
         }
 
-        // Lógica de la App
+        // Estado inicial de la aplicación
         let state = {
             balance: 0,
             products: [
                 { id: 1, name: 'Café', price: 1200 },
-                { id: 2, name: 'Medialuna', price: 800 },
-                { id: 3, name: 'Tostado', price: 3500 }
+                { id: 2, name: 'Medialuna', price: 800 }
             ],
             cart: [],
-            history: []
+            history: [],
+            currentCashType: 'income'
         };
 
         const STORAGE_KEY = 'billetera_emprendedor_v1';
 
+        // Persistencia de datos
         function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-        
         function load() {
             const data = localStorage.getItem(STORAGE_KEY);
             if(data) state = JSON.parse(data);
             render();
         }
 
+        // Navegación entre vistas
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        // Selección de tipo en la vista de Caja
+        function setCashType(type) {
+            state.currentCashType = type;
+            const incBtn = document.getElementById('type-income');
+            const expBtn = document.getElementById('type-expense');
+            if(type === 'income') {
+                incBtn.className = "py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white transition-all";
+                expBtn.className = "py-3 rounded-xl font-bold text-sm text-slate-400 hover:bg-slate-800 transition-all";
+            } else {
+                incBtn.className = "py-3 rounded-xl font-bold text-sm text-slate-400 hover:bg-slate-800 transition-all";
+                expBtn.className = "py-3 rounded-xl font-bold text-sm bg-rose-600 text-white transition-all";
+            }
+        }
+
+        // Función principal de dibujo de interfaz
         function render() {
             document.getElementById('main-balance').innerText = `$ ${state.balance.toLocaleString('es-AR')}`;
 
+            // Renderizar botones de venta
             const grid = document.getElementById('pos-grid');
             grid.innerHTML = state.products.map(p => `
                 <button onclick="addToCart(${p.id})" class="glass p-5 rounded-[1.5rem] flex flex-col items-start active-scale shadow-sm text-left">
@@ -202,11 +243,12 @@
                 </button>
             `).join('');
 
+            // Renderizar ticket actual
             const cartEl = document.getElementById('cart-items');
             const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
             
             if(state.cart.length === 0) {
-                cartEl.innerHTML = `<p class="text-center text-slate-600 text-sm py-6 font-medium italic">El ticket está vacío</p>`;
+                cartEl.innerHTML = `<p class="text-center text-slate-600 text-sm py-6 italic">Vacío</p>`;
             } else {
                 cartEl.innerHTML = state.cart.map(item => `
                     <div class="flex justify-between items-center bg-slate-800/40 p-4 rounded-2xl border border-slate-700/30">
@@ -221,31 +263,41 @@
 
             document.getElementById('cart-total').innerText = `$ ${total.toLocaleString('es-AR')}`;
             
+            // Cálculos de vuelto
             const payInput = document.getElementById('pay-amount');
             const pay = parseFloat(payInput.value) || 0;
             const change = total > 0 ? Math.max(0, pay - total) : 0;
             document.getElementById('change-amount').innerText = `$ ${change.toLocaleString('es-AR')}`;
 
+            // Renderizar historial con opción de borrado
             const histEl = document.getElementById('history-log');
-            histEl.innerHTML = state.history.slice(-10).reverse().map(h => `
-                <div class="glass p-4 rounded-2xl flex justify-between items-center border-l-4 border-l-emerald-500 mb-3 animate-in fade-in slide-in-from-left duration-300">
-                    <div>
-                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-tighter">${h.date}</p>
-                        <p class="text-xs font-bold text-slate-300 truncate w-40">${h.desc || 'Venta general'}</p>
+            histEl.innerHTML = state.history.slice(-20).reverse().map((h, index) => {
+                const realIndex = state.history.length - 1 - index;
+                const isExpense = h.type === 'expense';
+                return `
+                <div class="glass p-4 rounded-2xl flex justify-between items-center border-l-4 ${isExpense ? 'border-l-rose-500' : 'border-l-emerald-500'} mb-3 animate-in fade-in slide-in-from-left">
+                    <div class="flex-1 min-w-0 pr-4">
+                        <p class="text-[9px] font-black text-slate-500 uppercase">${h.date}</p>
+                        <p class="text-xs font-bold text-slate-300 truncate">${h.desc || 'Venta'}</p>
                     </div>
-                    <span class="font-black text-white text-lg">$ ${h.amount.toLocaleString('es-AR')}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black ${isExpense ? 'text-rose-400' : 'text-white'} text-lg">${isExpense ? '-' : ''}$ ${Math.abs(h.amount).toLocaleString('es-AR')}</span>
+                        <button onclick="removeHistoryItem(${realIndex})" class="w-8 h-8 flex items-center justify-center bg-rose-500/10 text-rose-500 rounded-full active-scale">✕</button>
+                    </div>
                 </div>
-            `).join('');
+            `;}).join('');
 
+            // Lista de productos en configuración
             const invEl = document.getElementById('full-inventory');
             invEl.innerHTML = state.products.map(p => `
                 <div class="flex justify-between items-center p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50">
                     <span class="font-bold text-sm">${p.name} <span class="text-indigo-400 ml-1">$${p.price}</span></span>
-                    <button onclick="removeProduct(${p.id})" class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase active-scale">Borrar</button>
+                    <button onclick="removeProduct(${p.id})" class="text-rose-500 text-xs font-black uppercase">Borrar</button>
                 </div>
             `).join('');
         }
 
+        // Lógica del Carrito
         function addToCart(id) {
             const p = state.products.find(x => x.id === id);
             const inCart = state.cart.find(x => x.id === id);
@@ -257,58 +309,86 @@
 
         function clearCart() { state.cart = []; render(); }
 
+        // Confirmar Venta POS
         function confirmSale() {
             const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
             if(total === 0) return;
-            
             state.balance += total;
             state.history.push({
                 date: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
                 amount: total,
+                type: 'income',
                 desc: state.cart.map(c => `${c.qty}x ${c.name}`).join(', ')
             });
-            
             clearCart();
             document.getElementById('pay-amount').value = '';
-            save();
-            render();
+            save(); render();
             if(navigator.vibrate) navigator.vibrate([40, 30, 40]);
         }
 
+        // Registro de Caja Manual
+        function registerCashMovement() {
+            const amountEl = document.getElementById('cash-amount');
+            const obsEl = document.getElementById('cash-obs');
+            const amount = parseFloat(amountEl.value);
+            const obs = obsEl.value.trim();
+
+            if(!amount || amount <= 0) return;
+
+            const finalAmount = state.currentCashType === 'income' ? amount : -amount;
+            state.balance += finalAmount;
+            state.history.push({
+                date: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
+                amount: finalAmount,
+                type: state.currentCashType,
+                desc: obs || (state.currentCashType === 'income' ? 'Ingreso manual' : 'Egreso manual')
+            });
+
+            amountEl.value = '';
+            obsEl.value = '';
+            save(); render();
+            switchView('pos-view');
+            if(navigator.vibrate) navigator.vibrate(30);
+        }
+
+        // Eliminación de movimientos del historial
+        function removeHistoryItem(index) {
+            if(confirm('¿Eliminar este movimiento? El balance se ajustará automáticamente.')) {
+                const item = state.history[index];
+                state.balance -= item.amount;
+                state.history.splice(index, 1);
+                save(); render();
+            }
+        }
+
+        // Gestión de Productos
         function addProduct() {
             const nameEl = document.getElementById('new-name');
             const priceEl = document.getElementById('new-price');
             const name = nameEl.value.trim();
             const price = parseInt(priceEl.value);
-            
             if(!name || isNaN(price)) return;
-            
             state.products.push({id: Date.now(), name, price});
-            nameEl.value = '';
-            priceEl.value = '';
-            save();
-            render();
+            nameEl.value = ''; priceEl.value = '';
+            save(); render();
         }
 
         function removeProduct(id) {
             state.products = state.products.filter(p => p.id !== id);
-            save();
-            render();
+            save(); render();
         }
 
         function clearAllData() {
-            if(confirm('¿Seguro quieres resetear todo? Se perderán ventas y productos.')) {
-                state.balance = 0;
-                state.history = [];
-                state.cart = [];
-                save();
-                render();
+            if(confirm('¿Borrar absolutamente toda la información?')) {
+                state.balance = 0; state.history = []; state.cart = [];
+                save(); render();
             }
         }
 
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+        // Eventos
         document.getElementById('pay-amount').addEventListener('input', render);
         window.onload = load;
     </script>

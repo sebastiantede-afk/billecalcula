@@ -4,392 +4,449 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#020617">
+    <meta name="theme-color" content="#0a192f">
     
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="manifest" href="manifest.json">
-
-    <title>Billetera Emprendedor Pro</title>
+    <title>Billetera Pro - Gestión de Gastos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
         
         body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #020617;
-            color: #f8fafc;
+            font-family: 'Inter', sans-serif; 
+            background-color: #050a14; /* Azul marino muy oscuro */
+            color: #ffffff;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
         }
 
-        .glass { 
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(51, 65, 85, 0.5);
+        .premium-glass { 
+            background: rgba(10, 25, 47, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .active-scale:active { transform: scale(0.96); transition: 0.1s; }
+        .active-scale:active { transform: scale(0.97); transition: 0.1s; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(5, 10, 20, 0.95);
             z-index: 100;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
         }
         .modal-overlay.active { display: flex; }
 
         .safe-top { padding-top: env(safe-area-inset-top); }
         .view { display: none; }
-        .view.active { display: block; }
+        .view.active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        input, textarea, select { caret-color: #fbbf24; }
+        .gold-accent { color: #fbbf24; }
+        .gold-bg { background-color: #fbbf24; }
 
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+
+        /* Estilo para los inputs en este fondo azul */
+        .input-dark {
+            background: rgba(2, 6, 12, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body class="pb-24">
 
-    <!-- Header Fijo -->
-    <nav class="sticky top-0 z-50 glass border-b border-slate-800 px-5 py-4 safe-top flex justify-between items-center">
+    <!-- Header -->
+    <nav class="sticky top-0 z-50 premium-glass border-b border-white/5 px-6 py-5 safe-top flex justify-between items-center">
         <div>
-            <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Balance Total</p>
-            <h1 id="main-balance" class="text-3xl font-extrabold text-white">$ 0</h1>
+            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">Patrimonio Actual</p>
+            <h1 id="main-balance" class="text-3xl font-light tracking-tight text-white">$ 0</h1>
         </div>
-        <div class="flex gap-2">
-            <!-- Botón de Caja (Ingresos/Egresos) -->
-            <button onclick="switchView('cash-view')" class="bg-slate-800 p-3 rounded-xl active-scale border border-slate-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div class="flex gap-3">
+            <button onclick="switchView('fixed-expenses-view')" class="bg-white/5 p-3 rounded-full active-scale border border-white/10" title="Calendario">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
             </button>
-            <button onclick="openModal('inventory-modal')" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-indigo-900 active-scale">MENU</button>
+            <button onclick="switchView('cash-view')" class="bg-white/5 p-3 rounded-full active-scale border border-white/10" title="Caja">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 gold-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </button>
+            <button onclick="openModal('inventory-modal')" class="bg-white text-black px-5 py-2 rounded-full text-[10px] font-black tracking-widest active-scale">PRODUCTOS</button>
         </div>
     </nav>
 
-    <!-- VISTA 1: VENTAS (POS) -->
+    <!-- VISTA 1: POS -->
     <div id="pos-view" class="view active">
-        <main class="p-4 space-y-6">
+        <main class="p-5 space-y-8">
             <section>
-                <h2 class="text-xs font-bold text-slate-500 uppercase mb-3 ml-1">Venta Rápida</h2>
-                <div id="pos-grid" class="grid grid-cols-2 gap-3"></div>
+                <h2 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1">Menú de Productos</h2>
+                <div id="pos-grid" class="grid grid-cols-2 gap-4"></div>
             </section>
 
-            <section class="glass rounded-[2.5rem] p-6 shadow-2xl border border-slate-700/50">
-                <div class="flex justify-between items-end mb-4">
-                    <h2 class="font-bold text-xl">Ticket</h2>
-                    <button onclick="clearCart()" class="text-[10px] text-slate-500 font-bold border border-slate-800 px-3 py-1 rounded-full uppercase">Limpiar</button>
+            <section class="premium-glass rounded-[2.5rem] p-7 shadow-2xl border border-white/10">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="font-bold text-lg tracking-tight">Venta Actual</h2>
+                    <button onclick="clearCart()" class="text-[9px] text-gray-500 font-bold border border-white/10 px-4 py-1.5 rounded-full uppercase tracking-tighter active-scale">Vaciar</button>
                 </div>
-                <div id="cart-items" class="space-y-3 mb-6 max-h-48 overflow-y-auto no-scrollbar"></div>
-                <div class="border-t border-slate-800 pt-5 space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-400 font-medium text-lg">Total:</span>
-                        <span id="cart-total" class="text-2xl font-black text-indigo-400">$ 0</span>
+                
+                <div id="cart-items" class="space-y-4 mb-4 max-h-56 overflow-y-auto no-scrollbar text-sm"></div>
+                
+                <!-- Sección de Descuento -->
+                <div class="flex items-center gap-3 mb-6 bg-white/5 p-3 rounded-xl border border-white/5">
+                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Descuento (%)</span>
+                    <input type="number" id="cart-discount" oninput="render(); calculateChange();" placeholder="0" class="w-20 input-dark p-2 rounded-lg text-center font-bold text-amber-500 outline-none">
+                </div>
+
+                <div class="border-t border-white/5 pt-6 space-y-5">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-gray-400 font-light text-base">Total Final:</span>
+                        <span id="cart-total" class="text-4xl font-black gold-accent tracking-tighter">$ 0</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Paga con:</label>
-                            <input type="number" id="pay-amount" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xl font-bold outline-none focus:border-indigo-500 transition-all" placeholder="0">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Vuelto:</label>
-                            <div class="w-full bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl text-xl font-bold text-emerald-400 overflow-hidden truncate">
-                                <span id="change-amount">$ 0</span>
-                            </div>
-                        </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" id="payment-received" oninput="calculateChange()" placeholder="Paga con..." class="w-full input-dark p-4 rounded-xl text-lg font-semibold outline-none focus:border-amber-500/50">
+                        <div id="payment-change" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-lg font-bold text-emerald-400 flex items-center justify-center italic text-center leading-tight">Vuelto: $0</div>
                     </div>
-                    <button onclick="confirmSale()" class="w-full py-5 bg-indigo-600 rounded-2xl font-extrabold text-white active-scale shadow-xl shadow-indigo-950/50 text-lg">REGISTRAR VENTA</button>
+                    
+                    <button onclick="confirmSale()" class="w-full py-5 gold-bg text-black rounded-2xl font-black active-scale shadow-lg text-sm uppercase tracking-[0.2em]">Confirmar Venta</button>
                 </div>
             </section>
 
             <section>
-                <h2 class="text-xs font-bold text-slate-500 uppercase mb-3 ml-1">Historial Reciente</h2>
-                <div id="history-log" class="space-y-2"></div>
+                <h2 class="text-[10px] font-bold text-gray-400 uppercase mb-4 ml-1 tracking-widest">Historial Reciente</h2>
+                <div id="history-log" class="space-y-3"></div>
             </section>
         </main>
     </div>
 
-    <!-- VISTA 2: CAJA (INGRESOS / EGRESOS) -->
+    <!-- VISTA 2: CAJA -->
     <div id="cash-view" class="view">
-        <main class="p-4 space-y-6">
-            <button onclick="switchView('pos-view')" class="text-indigo-400 text-xs font-bold flex items-center gap-2 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg> VOLVER A VENTAS
+        <main class="p-6 space-y-8">
+            <button onclick="switchView('pos-view')" class="text-gray-400 text-[10px] font-bold flex items-center gap-2 mb-4 tracking-widest uppercase">
+                ← Volver al POS
             </button>
 
-            <section class="glass rounded-[2rem] p-6 border border-slate-700/50">
-                <h2 class="font-bold text-xl mb-6">Nuevo Movimiento de Caja</h2>
+            <section class="premium-glass rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
+                <h2 class="font-bold text-xl mb-8 tracking-tight text-center italic underline decoration-amber-500/30">Registrar Movimiento</h2>
                 
-                <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-900 rounded-2xl border border-slate-800">
-                        <button id="type-income" onclick="setCashType('income')" class="py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white transition-all">INGRESO</button>
-                        <button id="type-expense" onclick="setCashType('expense')" class="py-3 rounded-xl font-bold text-sm text-slate-400 hover:bg-slate-800 transition-all">EGRESO</button>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-3 p-1.5 bg-black/40 rounded-xl">
+                        <button id="type-income" onclick="setCashType('income')" class="py-3.5 rounded-lg font-bold text-[10px] tracking-widest uppercase bg-white text-black transition-all">Ingreso</button>
+                        <button id="type-expense" onclick="setCashType('expense')" class="py-3.5 rounded-lg font-bold text-[10px] tracking-widest uppercase text-gray-400 transition-all">Gasto</button>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Monto</label>
-                        <input type="number" id="cash-amount" inputmode="decimal" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-2xl font-black outline-none focus:border-indigo-500" placeholder="0.00">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold text-gray-500 uppercase ml-1">Importe</label>
+                        <input type="number" id="cash-amount" oninput="renderInstallmentCalc()" class="w-full input-dark p-5 rounded-xl text-3xl font-light outline-none text-center" placeholder="0.00">
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Observación</label>
-                        <textarea id="cash-obs" rows="2" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-sm outline-none focus:border-indigo-500" placeholder="Ej: Pago de alquiler, carga de mercadería..."></textarea>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold text-gray-500 uppercase ml-1">Concepto</label>
+                        <textarea id="cash-obs" rows="2" class="w-full input-dark p-5 rounded-xl text-sm outline-none resize-none" placeholder="Ej: Insumos..."></textarea>
                     </div>
 
-                    <button onclick="registerCashMovement()" class="w-full py-5 bg-slate-100 text-slate-900 rounded-2xl font-black active-scale shadow-lg text-lg">GUARDAR MOVIMIENTO</button>
+                    <div id="expense-options" class="hidden space-y-4">
+                        <div class="grid grid-cols-2 gap-2 p-1 bg-black/40 rounded-xl">
+                            <button id="cash-method-cash" onclick="setCashMethod('cash')" class="py-2.5 rounded-lg font-bold text-[9px] uppercase bg-white text-black">Efectivo</button>
+                            <button id="cash-method-card" onclick="setCashMethod('card')" class="py-2.5 rounded-lg font-bold text-[9px] uppercase text-gray-500">Tarjeta</button>
+                        </div>
+
+                        <div id="cash-card-fields" class="hidden space-y-4">
+                            <select id="cash-installments" onchange="renderInstallmentCalc()" class="w-full input-dark p-4 rounded-xl text-white appearance-none"></select>
+                            <p id="cash-installment-info" class="text-[10px] text-center text-amber-400 font-medium"></p>
+                        </div>
+                    </div>
+
+                    <button onclick="registerCashMovement()" class="w-full py-5 gold-bg text-black rounded-2xl font-black active-scale text-xs uppercase tracking-[0.2em]">Guardar Movimiento</button>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Modales de Configuración -->
+    <!-- VISTA 3: CALENDARIO -->
+    <div id="fixed-expenses-view" class="view">
+        <main class="p-6 space-y-8">
+            <button onclick="switchView('pos-view')" class="text-gray-400 text-[10px] font-bold flex items-center gap-2 mb-4 tracking-widest uppercase">← Volver</button>
+            <section class="premium-glass rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
+                <h2 class="font-bold text-xl mb-6 tracking-tight text-center">Calendario de Pagos</h2>
+                <div id="fixed-expenses-list" class="space-y-3"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Catálogo -->
     <div id="inventory-modal" class="modal-overlay items-end justify-center">
-        <div class="bg-slate-900 w-full max-w-md rounded-t-[2.5rem] flex flex-col max-h-[90vh] border-t border-slate-800">
-            <div class="p-6 border-b border-slate-800 flex justify-between items-center">
-                <h3 class="font-bold text-xl">Configuración</h3>
-                <button onclick="closeModal('inventory-modal')" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-full active-scale">✕</button>
+        <div class="bg-[#050a14] w-full max-w-md rounded-t-[3rem] flex flex-col max-h-[92vh] border-t border-white/10">
+            <div class="p-8 border-b border-white/5 flex justify-between items-center">
+                <h3 class="font-bold text-lg tracking-tight">Catálogo de Productos</h3>
+                <button onclick="closeModal('inventory-modal')" class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-full">✕</button>
             </div>
-            <div class="p-6 overflow-y-auto no-scrollbar space-y-8 pb-32">
+            <div class="p-8 overflow-y-auto no-scrollbar space-y-8 pb-32">
                 <div class="space-y-4">
-                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Nuevo Producto</h4>
                     <div class="flex gap-2">
-                        <input type="text" id="new-name" placeholder="Nombre" class="flex-1 bg-slate-800 p-4 rounded-xl outline-none border border-slate-700">
-                        <input type="number" id="new-price" placeholder="$" class="w-28 bg-slate-800 p-4 rounded-xl outline-none border border-slate-700 font-bold">
+                        <input type="text" id="new-name" placeholder="Nombre" class="flex-1 input-dark p-4 rounded-xl text-sm outline-none">
+                        <input type="number" id="new-price" placeholder="$" class="w-24 input-dark p-4 rounded-xl text-sm text-center font-bold">
                     </div>
-                    <button onclick="addProduct()" class="w-full py-4 bg-slate-100 text-slate-900 rounded-xl font-black active-scale uppercase text-sm">Guardar Producto</button>
+                    <button onclick="addProduct()" class="w-full py-4 bg-white/10 text-white rounded-xl font-bold uppercase text-[10px]">Añadir al Menú</button>
                 </div>
-                <div class="space-y-4">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Mis Productos</h4>
-                    <div id="full-inventory" class="grid gap-2"></div>
-                </div>
-                <div class="pt-4">
-                    <button onclick="clearAllData()" class="w-full py-4 border border-rose-500/30 text-rose-500 rounded-xl font-bold text-xs uppercase tracking-widest active-scale">Borrar base de datos</button>
-                </div>
+                <div id="full-inventory" class="grid gap-2"></div>
+                <button onclick="clearAllData()" class="w-full py-4 border border-rose-900/30 text-rose-500 rounded-xl font-bold text-[9px] uppercase tracking-[0.2em]">Borrar Todo el Almacenamiento</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Manejo del Service Worker para funcionamiento PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
-            });
-        }
-
-        // Estado inicial de la aplicación
         let state = {
             balance: 0,
-            products: [
-                { id: 1, name: 'Café', price: 1200 },
-                { id: 2, name: 'Medialuna', price: 800 }
-            ],
+            products: [{ id: 1, name: 'Café Espresso', price: 1500 }, { id: 2, name: 'Medialuna', price: 900 }],
+            fixedExpenses: [],
             cart: [],
             history: [],
-            currentCashType: 'income'
+            currentCashType: 'income',
+            currentCashMethod: 'cash'
         };
 
-        const STORAGE_KEY = 'billetera_emprendedor_v1';
+        const STORAGE_KEY = 'billetera_v3_final';
 
-        // Persistencia de datos
         function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        
         function load() {
             const data = localStorage.getItem(STORAGE_KEY);
             if(data) state = JSON.parse(data);
+            populateInstallments();
             render();
         }
 
-        // Navegación entre vistas
-        function switchView(viewId) {
+        function populateInstallments() {
+            const sel = document.getElementById('cash-installments');
+            if(!sel) return;
+            sel.innerHTML = '';
+            for(let i=1; i<=48; i++) {
+                const opt = document.createElement('option');
+                opt.value = i; opt.textContent = `${i} cuota${i>1?'s':''}`;
+                sel.appendChild(opt);
+            }
+        }
+
+        function switchView(id) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+            document.getElementById(id).classList.add('active');
             window.scrollTo(0,0);
         }
 
-        // Selección de tipo en la vista de Caja
-        function setCashType(type) {
-            state.currentCashType = type;
-            const incBtn = document.getElementById('type-income');
-            const expBtn = document.getElementById('type-expense');
-            if(type === 'income') {
-                incBtn.className = "py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white transition-all";
-                expBtn.className = "py-3 rounded-xl font-bold text-sm text-slate-400 hover:bg-slate-800 transition-all";
-            } else {
-                incBtn.className = "py-3 rounded-xl font-bold text-sm text-slate-400 hover:bg-slate-800 transition-all";
-                expBtn.className = "py-3 rounded-xl font-bold text-sm bg-rose-600 text-white transition-all";
-            }
-        }
-
-        // Función principal de dibujo de interfaz
-        function render() {
-            document.getElementById('main-balance').innerText = `$ ${state.balance.toLocaleString('es-AR')}`;
-
-            // Renderizar botones de venta
-            const grid = document.getElementById('pos-grid');
-            grid.innerHTML = state.products.map(p => `
-                <button onclick="addToCart(${p.id})" class="glass p-5 rounded-[1.5rem] flex flex-col items-start active-scale shadow-sm text-left">
-                    <span class="text-[10px] font-extrabold text-slate-500 uppercase truncate w-full mb-1 opacity-70">${p.name}</span>
-                    <span class="text-xl font-black text-white">$ ${p.price.toLocaleString('es-AR')}</span>
-                </button>
-            `).join('');
-
-            // Renderizar ticket actual
-            const cartEl = document.getElementById('cart-items');
-            const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
-            
-            if(state.cart.length === 0) {
-                cartEl.innerHTML = `<p class="text-center text-slate-600 text-sm py-6 italic">Vacío</p>`;
-            } else {
-                cartEl.innerHTML = state.cart.map(item => `
-                    <div class="flex justify-between items-center bg-slate-800/40 p-4 rounded-2xl border border-slate-700/30">
-                        <div class="flex items-center gap-3">
-                            <span class="bg-indigo-600 text-[11px] font-black px-2 py-1 rounded-lg text-white">${item.qty}x</span>
-                            <span class="text-sm font-semibold text-slate-200">${item.name}</span>
-                        </div>
-                        <span class="font-bold text-indigo-400">$ ${(item.qty * item.price).toLocaleString('es-AR')}</span>
-                    </div>
-                `).join('');
-            }
-
-            document.getElementById('cart-total').innerText = `$ ${total.toLocaleString('es-AR')}`;
-            
-            // Cálculos de vuelto
-            const payInput = document.getElementById('pay-amount');
-            const pay = parseFloat(payInput.value) || 0;
-            const change = total > 0 ? Math.max(0, pay - total) : 0;
-            document.getElementById('change-amount').innerText = `$ ${change.toLocaleString('es-AR')}`;
-
-            // Renderizar historial con opción de borrado
-            const histEl = document.getElementById('history-log');
-            histEl.innerHTML = state.history.slice(-20).reverse().map((h, index) => {
-                const realIndex = state.history.length - 1 - index;
-                const isExpense = h.type === 'expense';
-                return `
-                <div class="glass p-4 rounded-2xl flex justify-between items-center border-l-4 ${isExpense ? 'border-l-rose-500' : 'border-l-emerald-500'} mb-3 animate-in fade-in slide-in-from-left">
-                    <div class="flex-1 min-w-0 pr-4">
-                        <p class="text-[9px] font-black text-slate-500 uppercase">${h.date}</p>
-                        <p class="text-xs font-bold text-slate-300 truncate">${h.desc || 'Venta'}</p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="font-black ${isExpense ? 'text-rose-400' : 'text-white'} text-lg">${isExpense ? '-' : ''}$ ${Math.abs(h.amount).toLocaleString('es-AR')}</span>
-                        <button onclick="removeHistoryItem(${realIndex})" class="w-8 h-8 flex items-center justify-center bg-rose-500/10 text-rose-500 rounded-full active-scale">✕</button>
-                    </div>
-                </div>
-            `;}).join('');
-
-            // Lista de productos en configuración
-            const invEl = document.getElementById('full-inventory');
-            invEl.innerHTML = state.products.map(p => `
-                <div class="flex justify-between items-center p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50">
-                    <span class="font-bold text-sm">${p.name} <span class="text-indigo-400 ml-1">$${p.price}</span></span>
-                    <button onclick="removeProduct(${p.id})" class="text-rose-500 text-xs font-black uppercase">Borrar</button>
-                </div>
-            `).join('');
-        }
-
-        // Lógica del Carrito
         function addToCart(id) {
             const p = state.products.find(x => x.id === id);
             const inCart = state.cart.find(x => x.id === id);
             if(inCart) inCart.qty++;
             else state.cart.push({...p, qty: 1});
             render();
-            if(navigator.vibrate) navigator.vibrate(8);
+            calculateChange();
         }
 
-        function clearCart() { state.cart = []; render(); }
+        function clearCart() { 
+            state.cart = []; 
+            document.getElementById('payment-received').value = ''; 
+            document.getElementById('cart-discount').value = '';
+            render(); 
+            calculateChange(); 
+        }
 
-        // Confirmar Venta POS
+        function getCartTotal() {
+            const subtotal = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const discountPercent = parseFloat(document.getElementById('cart-discount').value) || 0;
+            const discountAmount = subtotal * (discountPercent / 100);
+            return subtotal - discountAmount;
+        }
+
+        function calculateChange() {
+            const total = getCartTotal();
+            const received = parseFloat(document.getElementById('payment-received').value) || 0;
+            const el = document.getElementById('payment-change');
+            if(received >= total && total > 0) el.innerText = `Vuelto: $ ${(received - total).toLocaleString('es-AR')}`;
+            else el.innerText = `Vuelto: $ 0`;
+        }
+
         function confirmSale() {
-            const total = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
-            if(total === 0) return;
-            state.balance += total;
-            state.history.push({
-                date: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
-                amount: total,
-                type: 'income',
-                desc: state.cart.map(c => `${c.qty}x ${c.name}`).join(', ')
-            });
-            clearCart();
-            document.getElementById('pay-amount').value = '';
-            save(); render();
-            if(navigator.vibrate) navigator.vibrate([40, 30, 40]);
-        }
-
-        // Registro de Caja Manual
-        function registerCashMovement() {
-            const amountEl = document.getElementById('cash-amount');
-            const obsEl = document.getElementById('cash-obs');
-            const amount = parseFloat(amountEl.value);
-            const obs = obsEl.value.trim();
-
-            if(!amount || amount <= 0) return;
-
-            const finalAmount = state.currentCashType === 'income' ? amount : -amount;
-            state.balance += finalAmount;
-            state.history.push({
-                date: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
-                amount: finalAmount,
-                type: state.currentCashType,
-                desc: obs || (state.currentCashType === 'income' ? 'Ingreso manual' : 'Egreso manual')
-            });
-
-            amountEl.value = '';
-            obsEl.value = '';
-            save(); render();
-            switchView('pos-view');
-            if(navigator.vibrate) navigator.vibrate(30);
-        }
-
-        // Eliminación de movimientos del historial
-        function removeHistoryItem(index) {
-            if(confirm('¿Eliminar este movimiento? El balance se ajustará automáticamente.')) {
-                const item = state.history[index];
-                state.balance -= item.amount;
-                state.history.splice(index, 1);
-                save(); render();
+            const total = getCartTotal();
+            if(total <= 0 && state.cart.length === 0) return;
+            
+            const discountPercent = parseFloat(document.getElementById('cart-discount').value) || 0;
+            const subtotal = state.cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            let desc = state.cart.map(c => `${c.qty}x ${c.name}`).join(', ');
+            
+            if (discountPercent > 0) {
+                desc += ` (Desc. ${discountPercent}%)`;
             }
+
+            state.balance += total;
+            state.history.push({ 
+                date: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), 
+                amount: total, 
+                type: 'income', 
+                desc: `Venta: ${desc}` 
+            });
+            clearCart(); save(); render();
         }
 
-        // Gestión de Productos
+        function setCashType(t) {
+            state.currentCashType = t;
+            document.getElementById('type-income').className = t === 'income' ? "py-3.5 rounded-lg font-bold text-[10px] tracking-widest uppercase bg-white text-black" : "py-3.5 rounded-lg font-bold text-[10px] tracking-widest uppercase text-gray-400";
+            document.getElementById('type-expense').className = t === 'expense' ? "py-3.5 rounded-lg font-bold text-[10px] tracking-widest uppercase bg-white text-black" : "py-3.5 rounded-lg font-bold text-[10px] tracking-widest uppercase text-gray-400";
+            document.getElementById('expense-options').classList.toggle('hidden', t === 'income');
+        }
+
+        function setCashMethod(m) {
+            state.currentCashMethod = m;
+            document.getElementById('cash-method-cash').className = m === 'cash' ? "py-2.5 rounded-lg font-bold text-[9px] uppercase bg-white text-black" : "py-2.5 rounded-lg font-bold text-[9px] uppercase text-gray-500";
+            document.getElementById('cash-method-card').className = m === 'card' ? "py-2.5 rounded-lg font-bold text-[9px] uppercase bg-white text-black" : "py-2.5 rounded-lg font-bold text-[9px] uppercase text-gray-500";
+            document.getElementById('cash-card-fields').classList.toggle('hidden', m === 'cash');
+        }
+
+        function renderInstallmentCalc() {
+            const val = parseFloat(document.getElementById('cash-amount').value) || 0;
+            const ins = parseInt(document.getElementById('cash-installments').value) || 1;
+            document.getElementById('cash-installment-info').innerText = ins > 1 ? `${ins} cuotas de $ ${(val/ins).toLocaleString('es-AR')}` : "";
+        }
+
+        function registerCashMovement() {
+            const val = parseFloat(document.getElementById('cash-amount').value);
+            const obs = document.getElementById('cash-obs').value || 'Movimiento manual';
+            if(!val) return;
+
+            if(state.currentCashType === 'income') {
+                state.balance += val;
+                state.history.push({ date: 'Manual', amount: val, type: 'income', desc: obs });
+            } else {
+                if(state.currentCashMethod === 'cash') {
+                    state.balance -= val;
+                    state.history.push({ date: 'Manual', amount: -val, type: 'expense', desc: obs });
+                } else {
+                    const ins = parseInt(document.getElementById('cash-installments').value);
+                    state.history.push({ date: 'Tarjeta', amount: -val, type: 'expense', desc: `${obs} (${ins} cuotas)` });
+                    const now = new Date();
+                    for(let i=0; i<ins; i++) {
+                        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                        state.fixedExpenses.push({ id: Date.now() + i, name: `Cuota ${i+1}/${ins}: ${obs} (${d.toLocaleDateString('es-ES', {month:'short'})})`, amount: val/ins });
+                    }
+                }
+            }
+            document.getElementById('cash-amount').value = '';
+            document.getElementById('cash-obs').value = '';
+            save(); render(); switchView('pos-view');
+        }
+
+        function removeHistoryItem(idx) {
+            state.balance -= state.history[idx].amount;
+            state.history.splice(idx, 1);
+            save(); render();
+        }
+
+        function payFixedExpense(id) {
+            const item = state.fixedExpenses.find(x => x.id === id);
+            if(!item) return;
+            state.balance -= item.amount;
+            state.history.push({ date: 'Pago Cuota', amount: -item.amount, type: 'expense', desc: item.name });
+            state.fixedExpenses = state.fixedExpenses.filter(x => x.id !== id);
+            save(); render();
+        }
+
+        function removeFixedExpense(id) {
+            state.fixedExpenses = state.fixedExpenses.filter(x => x.id !== id);
+            save(); render();
+        }
+
         function addProduct() {
-            const nameEl = document.getElementById('new-name');
-            const priceEl = document.getElementById('new-price');
-            const name = nameEl.value.trim();
-            const price = parseInt(priceEl.value);
-            if(!name || isNaN(price)) return;
-            state.products.push({id: Date.now(), name, price});
-            nameEl.value = ''; priceEl.value = '';
+            const n = document.getElementById('new-name');
+            const p = document.getElementById('new-price');
+            if(!n.value || !p.value) return;
+            state.products.push({ id: Date.now(), name: n.value, price: parseFloat(p.value) });
+            n.value = ''; p.value = '';
             save(); render();
         }
 
         function removeProduct(id) {
-            state.products = state.products.filter(p => p.id !== id);
+            state.products = state.products.filter(x => x.id !== id);
             save(); render();
-        }
-
-        function clearAllData() {
-            if(confirm('¿Borrar absolutamente toda la información?')) {
-                state.balance = 0; state.history = []; state.cart = [];
-                save(); render();
-            }
         }
 
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function clearAllData() { if(confirm('¿Borrar TODO definitivamente?')) { localStorage.clear(); location.reload(); } }
 
-        // Eventos
-        document.getElementById('pay-amount').addEventListener('input', render);
+        function render() {
+            document.getElementById('main-balance').innerText = `$ ${state.balance.toLocaleString('es-AR')}`;
+            
+            const grid = document.getElementById('pos-grid');
+            grid.innerHTML = state.products.map(p => `
+                <button onclick="addToCart(${p.id})" class="premium-glass p-6 rounded-[2rem] flex flex-col items-start active-scale text-left">
+                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">${p.name}</span>
+                    <span class="text-xl font-bold text-white tracking-tighter">$ ${p.price.toLocaleString('es-AR')}</span>
+                </button>
+            `).join('');
+
+            const cartEl = document.getElementById('cart-items');
+            cartEl.innerHTML = state.cart.length === 0 ? `<p class="text-center text-gray-500 italic py-4">Venta vacía</p>` :
+                state.cart.map(i => `<div class="flex justify-between border-b border-white/5 pb-2"><span>${i.qty}x ${i.name}</span><b>$ ${(i.qty*i.price).toLocaleString()}</b></div>`).join('');
+            
+            const finalTotal = getCartTotal();
+            document.getElementById('cart-total').innerText = `$ ${finalTotal.toLocaleString('es-AR')}`;
+
+            const histEl = document.getElementById('history-log');
+            histEl.innerHTML = state.history.slice(-10).reverse().map((h, i) => {
+                const realIdx = state.history.length - 1 - i;
+                return `
+                <div class="premium-glass p-4 rounded-3xl flex justify-between items-center border border-white/5">
+                    <div class="truncate pr-2">
+                        <p class="text-[8px] text-gray-500 uppercase font-bold">${h.date}</p>
+                        <p class="text-xs font-medium truncate">${h.desc}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold ${h.amount < 0 ? 'text-rose-400' : 'text-emerald-400'}">$ ${Math.abs(h.amount).toLocaleString()}</span>
+                        <button onclick="removeHistoryItem(${realIdx})" class="text-gray-600 text-xs">✕</button>
+                    </div>
+                </div>
+            `}).join('');
+
+            const fixedEl = document.getElementById('fixed-expenses-list');
+            fixedEl.innerHTML = state.fixedExpenses.length === 0 ? `<p class="text-center text-gray-600 text-xs">Sin pagos pendientes</p>` :
+                state.fixedExpenses.map(fe => `
+                <div class="bg-white/5 p-4 rounded-xl flex justify-between items-center border border-white/5">
+                    <div class="truncate mr-2">
+                        <p class="text-xs font-bold text-white truncate">${fe.name}</p>
+                        <p class="text-[10px] gold-accent">$ ${fe.amount.toLocaleString()}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="payFixedExpense(${fe.id})" class="bg-white text-black px-3 py-1.5 rounded-lg text-[9px] font-black">PAGAR</button>
+                        <button onclick="removeFixedExpense(${fe.id})" class="text-rose-500 px-2">✕</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const invEl = document.getElementById('full-inventory');
+            invEl.innerHTML = state.products.map(p => `
+                <div class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                    <span class="text-xs">${p.name} ($${p.price})</span>
+                    <button onclick="removeProduct(${p.id})" class="text-rose-500 text-[10px] font-bold">BORRAR</button>
+                </div>
+            `).join('');
+        }
+
         window.onload = load;
     </script>
 </body>
